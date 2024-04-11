@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1
 # Установка необходимых инструментов и библиотек
 RUN apk update \
 && apk add --no-cache curl gnupg unixodbc-dev g++ gcc make \
-&& apk add --virtual .build-deps g++ gcc make
+&& apk add --virtual .build-deps g++ gcc make \
 && apk add --no-cache supervisor
 
 # Добавление ключа Microsoft GPG
