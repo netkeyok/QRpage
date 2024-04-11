@@ -156,6 +156,7 @@ def send_docs_ids(doc_id):
         expday = doc_date + timedelta(expdays)
         print(doc_id, mark, expday.strftime('%d.%m.%Y'))
         create_qr(mark, expday.strftime('%d.%m.%Y'), org_name(org), doc_id, org)
+    return f'{doc_id} is send'
 
 
 def check_docs():
@@ -178,4 +179,4 @@ def check_docs():
 
 
 if __name__ == '__main__':
-    check_docs()
+    send_docs_ids(293)
