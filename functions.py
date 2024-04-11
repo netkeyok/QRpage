@@ -170,9 +170,9 @@ def check_docs():
             int_result = int(result)
             if int_result != doc_id:
                 send_docs_ids(doc_id)
-                res = doc_id
+                res = f'Document No. {doc_id} was sent'
             else:
-                res = 'All Docs Sended'
+                res = 'Nothing to send'
     print('End checking')
     return res
 
