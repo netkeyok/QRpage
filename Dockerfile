@@ -8,6 +8,7 @@ ENV PYTHONUNBUFFERED=1
 RUN apk update \
 && apk add --no-cache curl gnupg unixodbc-dev g++ gcc make \
 && apk add --virtual .build-deps g++ gcc make
+&& apk add --no-cache supervisor
 
 # Добавление ключа Microsoft GPG
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --import -
