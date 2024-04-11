@@ -31,5 +31,4 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
 # Команды, выполняемые при запуске контейнера
-#CMD ["python3", "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8082"] && ["celery", "-A", "tasks.tasks:celery_app", "worker", "--loglevel=INFO"] && ["celery", "-A", "tasks.tasks:celery_app", "flower"] && ["celery", "-A", "tasks.tasks", "beat", "-l", "INFO"]
 CMD ["supervisord", "-c", "supervisord.conf"]
