@@ -4,6 +4,9 @@ FROM python:3.11.9-alpine3.19
 # Установка переменных окружения для немедленного вывода логов в консоль
 ENV PYTHONUNBUFFERED=1
 
+# Установка переменной окружения FLOWER_TIMEZONE
+ENV FLOWER_TIMEZONE=Asia/Yekaterinburg
+
 # Установка необходимых инструментов и библиотек
 RUN apk update \
 && apk add --no-cache curl gnupg unixodbc-dev g++ gcc make \
