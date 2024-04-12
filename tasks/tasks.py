@@ -19,9 +19,3 @@ celery_app.conf.beat_schedule = {
 def start_check_docs():
     result = check_docs()
     return result
-
-
-@celery_app.task
-def start_check_docs():
-    result = check_docs()
-    return result
