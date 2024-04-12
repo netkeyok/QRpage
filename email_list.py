@@ -15,5 +15,6 @@ mail_dict = {
     "Апельсин 12 БАР": "oper_rev.ap12@local",
     "Апельсин 13": "klueva@local",
     "Апельсин 16": "oper.ap16@local",
-    "Апельсин 17": "director.ap17@local"
+    "Апельсин 17": "director.ap17@local",
+    "Апельсин 18": "admin@local"
 }
