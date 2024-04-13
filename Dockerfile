@@ -34,5 +34,9 @@ COPY . .
 RUN pip install --upgrade pip \
 && pip install -r requirements.txt
 
+# Создание папки temp и выдача прав для файла supervisord.conf
+RUN mkdir /temp \
+&& chmod 644 /app/supervisord.conf
+
 # Команды, выполняемые при запуске контейнера
 CMD ["supervisord", "-c", "supervisord.conf"]
