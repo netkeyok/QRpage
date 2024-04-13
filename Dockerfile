@@ -36,7 +36,7 @@ RUN pip install --upgrade pip \
 
 # Создание папки temp и выдача прав для файла supervisord.conf
 RUN mkdir /temp \
-&& chmod 644 /app/supervisord.conf
+&& chmod 644 /supervisord.conf
 
 # Команды, выполняемые при запуске контейнера
 CMD ["supervisord", "-c", "supervisord.conf"]
