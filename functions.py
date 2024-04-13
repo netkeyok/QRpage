@@ -1,6 +1,7 @@
 import os
 import sys
 
+
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -12,7 +13,7 @@ from email.message import EmailMessage
 from dbcon.config import server_email, redis_conn
 from email_list import mail_dict
 from datetime import datetime, timedelta
-from dbcon.db_requestst import request_docs, organization_list, org_name
+from dbcon.db_requestst import request_docs, organization_list, org_name, update_doc_log, check_doc_log
 from api_request.request_to_sm import get_article_name
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -23,35 +24,7 @@ orgs = organization_list()
 path = os.path.join(sys.path[0], "temp")
 
 
-# Функция отправки файла на эл почту компании
-# def send_email(file_path, shop, doc, art_name, org_id):
-#     recipient_email = ''
-#     if shop in mail_dict:
-#
-#         recipient_email = mail_dict[shop]
-#     else:
-#         print("Адрес не найден")
-#
-#     try:
-#         with open(file_path, 'rb') as file:
-#             file_data = file.read()
-#         msg_text = f'QR коды {art_name} К документу {doc}'
-#         msg = EmailMessage()
-#         msg['From'] = 'qr@local'
-#         msg['To'] = recipient_email
-#         msg['Subject'] = msg_text
-#         msg.set_content(msg_text)
-#         msg.add_attachment(file_data, maintype='application', subtype='octet-stream', filename=file_path)
-#
-#         with smtplib.SMTP(server_email, 25) as smtp:
-#             smtp.send_message(msg)
-#             print('Email sent successfully')
-#             redis_conn.set(org_id, doc)
-#
-#     except Exception as e:
-#         print(f'Failed to send email: {e}')
-
-def send_email(shop, doc, org_id, shcode=None, file_path=None, art_name=None):
+def send_email(shop, doc, org_id, shcode=None, file_path=None, card_name=None):
     recipient_email = ''
     if shop in mail_dict:
         recipient_email = mail_dict[shop]
@@ -63,18 +36,20 @@ def send_email(shop, doc, org_id, shcode=None, file_path=None, art_name=None):
         msg['From'] = 'qr@local'
         msg['To'] = recipient_email
 
-        if file_path and art_name:
+        if file_path and card_name:
             with open(file_path, 'rb') as file:
                 file_data = file.read()
-                msg_text = f'QR коды {art_name} К документу {doc}'
+                msg_text = f'QR коды {card_name} К документу {doc}'
                 msg['Subject'] = msg_text
                 msg.set_content(msg_text)
                 msg.add_attachment(file_data, maintype='application', subtype='octet-stream', filename=file_path)
+                update_doc_log(doc_id=doc)
         else:
+            error_text = 'Штрихкод не найден'
             msg = MIMEMultipart('alternative')
             msg['From'] = 'qr@local'
             msg['To'] = recipient_email
-            msg['Subject'] = 'Штрихкод не найден'
+            msg['Subject'] = error_text
 
             # HTML-версия письма
             html_content = f"""
@@ -88,13 +63,17 @@ def send_email(shop, doc, org_id, shcode=None, file_path=None, art_name=None):
             """
             # Добавляем HTML-версию в сообщение
             msg.attach(MIMEText(html_content, 'html'))
+            update_doc_log(doc_id=doc, error=error_text)
         with smtplib.SMTP(server_email, 25) as smtp:
             smtp.send_message(msg)
             print('Email sent successfully')
-            redis_conn.set(org_id, doc)
 
     except Exception as e:
-        print(f'Failed to send email: {e}')
+        error_text = f'Failed to send email: {e}'
+        update_doc_log(doc_id=doc, error=f'Failed to send email: {e}')
+        print(error_text)
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
 
 # Функция создания pdf файла с QR
@@ -138,49 +117,6 @@ def create_pdf_with_images(image_path, output_pdf_path, caption, title):
     c.save()
 
 
-# def create_pdf_with_text(output_pdf_path, doc_id, shcode):
-#     # Регистрация шрифта TrueType
-#     pdfmetrics.registerFont(TTFont('courier', 'courier.ttf'))  # Укажите путь к файлу шрифта
-#     c = canvas.Canvas(output_pdf_path, pagesize=A4)
-#     width, height = A4
-#     left_margin = 15 * mm
-#
-#     # Заголовок красным цветом
-#     c.setFont('courier', 24)  # Размер шрифта для заголовка
-#     c.setFillColor(red)
-#     c.drawString(left_margin, height - 40 * mm, "Внимание!")
-#
-#     # Текст для вывода в PDF, разбитый на три строки
-#     text_line1 = f"Штрихкод из марки документа {doc_id} отсутствует в базе супермаг,"
-#     text_line2 = f"передайте данный штрихкод {shcode} старшему оператору,"
-#     text_line3 = f"чтобы он добавил его в базу данных Супермаг"
-#
-#     # Установка шрифта для текста
-#     c.setFont('courier', 14)  # Размер шрифта для текста
-#     c.setFillColor(black)  # Возвращаем цвет текста к черному
-#
-#     # Размещение текста
-#     c.drawString(left_margin, height - 60 * mm, text_line1)
-#
-#     # Выделение переменных красным цветом
-#     c.setFillColor(red)
-#     c.drawString(left_margin + c.stringWidth(text_line1[:text_line1.find(doc_id)]), height - 60 * mm, doc_id)
-#     c.setFillColor(black)
-#     c.drawString(left_margin + c.stringWidth(text_line1), height - 60 * mm,
-#                  text_line1[text_line1.find(doc_id) + len(doc_id):])
-#
-#     c.drawString(left_margin, height - 70 * mm, text_line2)
-#     c.setFillColor(red)
-#     c.drawString(left_margin + c.stringWidth(text_line2[:text_line2.find(shcode)]), height - 70 * mm, shcode)
-#     c.setFillColor(black)
-#     c.drawString(left_margin + c.stringWidth(text_line2), height - 70 * mm,
-#                  text_line2[text_line2.find(shcode) + len(shcode):])
-#
-#     c.drawString(left_margin, height - 80 * mm, text_line3)
-#
-#     c.save()
-
-
 # Создание изображения QR кода
 def create_qr(gs1, expdate, shop, doc_id, org_id):
     shop_name = f'Магазин {shop}'
@@ -209,7 +145,9 @@ def create_qr(gs1, expdate, shop, doc_id, org_id):
     if name:
         captions = [name[:17], name[17:35], name[35:], shcode, expdate, text]
         create_pdf_with_images(temp_image, file_pdf, captions, shop_name)
-        send_email(file_pdf, shop, doc_id, name, org_id)
+        send_email(file_path=file_pdf, shop=shop, doc=doc_id, card_name=name, org_id=org_id)
+        if os.path.exists(temp_image):
+            os.remove(temp_image)
 
     else:
         send_email(shop=shop, org_id=org_id, doc=doc_id, shcode=shcode)
@@ -220,8 +158,6 @@ def create_qr(gs1, expdate, shop, doc_id, org_id):
 
     # qr_img = qrcode.make(qr_data)
     # qr_img.save(temp_image)
-
-
 
 
 def send_docs_dates():
@@ -272,8 +208,33 @@ def check_docs():
     return res
 
 
+def check_doc_status():
+    date_now = datetime.now()
+    date_ago = date_now - timedelta(days=1)
+    added = []
+    resend = []
+    for i in orgs:
+        org = i['Id']
+        data = request_docs(date_start=date_ago, date_end=date_now, orgid=org)
+        for d in data:
+            doc_id = d[0]
+            print(f'Проверка документа: {doc_id}')
+            result_check = check_doc_log(doc_id)
+            print(result_check[0][1])
+            if result_check is None:
+                send_docs_ids(doc_id)
+                added.append(doc_id)
+            elif result_check[0][1] != 2:
+                send_docs_ids(doc_id)
+                resend.append(doc_id)
+    return {
+        'docs_add': added,
+        'docs_resend': resend
+    }
+
+
 if __name__ == '__main__':
-    # send_docs_ids(583)
+    send_docs_ids(579)
     # create_pdf_with_text('output.pdf', '123456', '7890123456789')
     # send_email("Апельсин 18", org_id=99, doc=585, shcode='7890123456789')
-    send_email("Апельсин 18", org_id=99, doc=585, shcode='7890123456789')
+    # send_email("Апельсин 18", org_id=99, doc=585, shcode='7890123456789')

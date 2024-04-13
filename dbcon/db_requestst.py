@@ -1,6 +1,7 @@
-from dbcon.egais_model import ConnectTap, ConnectTapSpec, Utms
+from datetime import datetime, timedelta
+
+from dbcon.egais_model import ConnectTap, ConnectTapSpec, Utms, ConnectTapLog
 from dbcon.config import session
-from dbcon.egais_model import SMCardsOrange
 from sqlalchemy import select, and_, desc
 
 
@@ -62,67 +63,6 @@ def request_docs(date_start=None, date_end=None, doc_id=None, orgid=None):
         return results
 
 
-# def sync_barcodes():
-#     # Очистка таблицы SMCardsOrange
-#     try:
-#         sessionMssql.query(SMCardsOrange).delete(synchronize_session=False)
-#         sessionMssql.commit()
-#     except IntegrityError as e:
-#         print(f"Ошибка целостности при очистке таблицы SMCardsOrange: {e}")
-#         sessionMssql.rollback()
-#     except InvalidRequestError as e:
-#         print(f"Неверный запрос при очистке таблицы SMCardsOrange: {e}")
-#         sessionMssql.rollback()
-#
-#     # Формирование запроса для получения данных
-#     SMrequest = (
-#         select(SMCard.article, SMCard.shortname, SMStoreUnits.barcode)
-#         .join(SMStoreUnits, SMCard.article == SMStoreUnits.article)
-#         .where(
-#             and_(
-#                 SMCard.idclass.in_(
-#                     select(SACardClass.id).where(SACardClass.tree.like('36.%'))
-#                 ),
-#                 SMStoreUnits.barcodetype == 7
-#             )
-#         )
-#     )
-#
-#     # Получение данных из Oracle
-#     SMresults = sessionOracle.execute(SMrequest).all()
-#     for data in SMresults:
-#         print(data)
-#
-#     # Вставка данных в таблицу SMCardsOrange
-#     for article, shortname, barcode in SMresults:
-#         new_card = SMCardsOrange(ARTICLE=article, SHORTNAME=shortname, BARCODE=barcode)
-#         sessionMssql.add(new_card)
-#
-#     # Сохранение изменений в базе данных
-#     try:
-#         sessionMssql.commit()
-#     except IntegrityError as e:
-#         print(f"Ошибка целостности при вставке данных: {e}")
-#         sessionMssql.rollback()
-#     except InvalidRequestError as e:
-#         print(f"Неверный запрос при вставке данных: {e}")
-#         sessionMssql.rollback()
-#
-#     # Закрытие сессий
-#     sessionMssql.close()
-#     sessionOracle.close()
-#
-#     print('Complete')
-
-
-def get_card(shkode):
-    request = (
-        select(SMCardsOrange.SHORTNAME).where(SMCardsOrange.BARCODE == shkode)
-    )
-    result = session.execute(request).scalar()
-    return result
-
-
 def organization_list():
     with session as s:
         org_list = (select(Utms.Id, Utms.Comment))
@@ -139,5 +79,61 @@ def org_name(id):
     return result[0]
 
 
+def check_docs(doc_id):
+    with session as s:
+        request = (
+            select(ConnectTapLog.id,
+                   ConnectTapLog.Status,
+                   ConnectTapLog.Error,
+                   ConnectTapLog.DocDateSend)
+        ).where(ConnectTapLog.id == doc_id
+                ).order_by(desc(ConnectTapLog.DocDateSend)
+                           ).limit(1)
+    result = s.execute(request).all()
+    return result
+
+
+def update_doc_log(doc_id, error=None):
+    with session as s:
+        if error:
+            new_log = ConnectTapLog(
+                id=doc_id,
+                DocDateSend=datetime.now(),
+                Status=1,
+                Error=error
+            )
+        else:
+            new_log = ConnectTapLog(
+                id=doc_id,
+                DocDateSend=datetime.now(),
+                Status=2,
+                Error=None
+            )
+        s.merge(new_log)
+        s.commit()
+
+
+def check_doc_log(doc_id):
+    with session as s:
+        request = (
+            select(ConnectTapLog.id,
+                   ConnectTapLog.Status,
+                   ConnectTapLog.Error,
+                   ConnectTapLog.DocDateSend)
+        ).where(ConnectTapLog.id == doc_id
+                ).order_by(desc(ConnectTapLog.DocDateSend)
+                           ).limit(1)
+    result = s.execute(request).all()
+    if result:
+        return result
+    else:
+        return None
+
+
 if __name__ == '__main__':
-    pass
+    date_now = datetime.now()
+    date_ago = date_now - timedelta(days=2)
+
+    data = request_docs(date_start=date_ago, date_end=date_now, orgid=27)
+    for d in data:
+        print(d)

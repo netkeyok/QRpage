@@ -43,9 +43,10 @@ class Utms(Base):
     Comment = Column(String(100))
 
 
-class SMCardsOrange(Base):
-    __tablename__ = 'SMCardsOrange'
+class ConnectTapLog(Base):
+    __tablename__ = 'RinatConnectTapLog'
 
-    ARTICLE = Column(String(50), nullable=True)
-    SHORTNAME = Column(String(255), nullable=True)
-    BARCODE = Column(String(50), nullable=True, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    DocDateSend = Column(DateTime, nullable=False)
+    Status = Column(SmallInteger, nullable=False)
+    Error = Column(String(2000))
