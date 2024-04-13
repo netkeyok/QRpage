@@ -24,11 +24,13 @@ orgs = organization_list()
 path = os.path.join(sys.path[0], "temp")
 
 
-def send_email(shop, doc, org_id, shcode=None, file_path=None, card_name=None):
+def send_email(shop, doc, shcode=None, file_path=None, card_name=None):
     recipient_email = ''
     if shop in mail_dict:
         recipient_email = mail_dict[shop]
+        print(shop)
     else:
+        print(shop)
         print("Адрес не найден")
 
     try:
@@ -145,7 +147,7 @@ def create_qr(gs1, expdate, shop, doc_id, org_id):
     if name:
         captions = [name[:17], name[17:35], name[35:], shcode, expdate, text]
         create_pdf_with_images(temp_image, file_pdf, captions, shop_name)
-        send_email(file_path=file_pdf, shop=shop, doc=doc_id, card_name=name, org_id=org_id)
+        send_email(file_path=file_pdf, shop=shop, doc=doc_id, card_name=name)
         if os.path.exists(temp_image):
             os.remove(temp_image)
 
@@ -210,7 +212,7 @@ def check_docs():
 
 def check_doc_status():
     date_now = datetime.now()
-    date_ago = date_now - timedelta(days=1)
+    date_ago = date_now - timedelta(days=2)
     added = []
     resend = []
     for i in orgs:
@@ -220,7 +222,7 @@ def check_doc_status():
             doc_id = d[0]
             print(f'Проверка документа: {doc_id}')
             result_check = check_doc_log(doc_id)
-            print(result_check[0][1])
+            print(result_check)
             if result_check is None:
                 send_docs_ids(doc_id)
                 added.append(doc_id)
@@ -234,7 +236,8 @@ def check_doc_status():
 
 
 if __name__ == '__main__':
-    send_docs_ids(579)
+    # send_docs_ids(579)
     # create_pdf_with_text('output.pdf', '123456', '7890123456789')
     # send_email("Апельсин 18", org_id=99, doc=585, shcode='7890123456789')
     # send_email("Апельсин 18", org_id=99, doc=585, shcode='7890123456789')
+    check_doc_status()

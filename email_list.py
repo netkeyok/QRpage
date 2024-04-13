@@ -4,6 +4,7 @@
 
 mail_dict = {
     "Апельсин 1": "oper.ap1@local",
+    "Апельсин 2": "admin@local",
     "Апельсин 4": "Samonina_E@local",
     "Апельсин 5": "oper.ap5@local",
     "Апельсин 6": "sannikova_k@local",
