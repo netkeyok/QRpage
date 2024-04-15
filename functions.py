@@ -74,7 +74,7 @@ def send_email(shop, doc, shcode=None, file_path=None, card_name=None):
         error_text = f'Failed to send email: {e}'
         update_doc_log(doc_id=doc, error=f'Failed to send email: {e}')
         print(error_text)
-    if os.path.exists(file_path):
+    if file_path is not None and os.path.exists(file_path):
         os.remove(file_path)
 
 
@@ -148,11 +148,11 @@ def create_qr(gs1, expdate, shop, doc_id, org_id):
         captions = [name[:17], name[17:35], name[35:], shcode, expdate, text]
         create_pdf_with_images(temp_image, file_pdf, captions, shop_name)
         send_email(file_path=file_pdf, shop=shop, doc=doc_id, card_name=name)
-        if os.path.exists(temp_image):
+        if temp_image is not None and os.path.exists(temp_image):
             os.remove(temp_image)
 
     else:
-        send_email(shop=shop, org_id=org_id, doc=doc_id, shcode=shcode)
+        send_email(shop=shop, doc=doc_id, shcode=shcode)
         # captions = ['Не печатать!'] * 6
         # captions[3] = shcode
         # pdf_writer = f'{shop_name}_{doc_id}_Не печатать.pdf'
@@ -186,8 +186,8 @@ def send_docs_ids(doc_id):
     docs = request_docs(doc_id=doc_id)
     for doc_id, mark, expdays, doc_date, org in docs:
         expday = doc_date + timedelta(expdays)
-        print(doc_id, mark, expday.strftime('%d.%m.%Y'))
-        create_qr(mark, expday.strftime('%d.%m.%Y'), org_name(org), doc_id, org)
+        print(doc_id, mark, expday.strftime('%d.%m.%Y'), org_name(org), org)
+        create_qr(gs1=mark, expdate=expday.strftime('%d.%m.%Y'), shop=org_name(org), doc_id=doc_id, org_id=org)
     return f'{doc_id} is send'
 
 
@@ -236,8 +236,8 @@ def check_doc_status():
 
 
 if __name__ == '__main__':
-    # send_docs_ids(579)
+    send_docs_ids(302)
     # create_pdf_with_text('output.pdf', '123456', '7890123456789')
     # send_email("Апельсин 18", org_id=99, doc=585, shcode='7890123456789')
     # send_email("Апельсин 18", org_id=99, doc=585, shcode='7890123456789')
-    check_doc_status()
+    # check_doc_status()
