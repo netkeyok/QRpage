@@ -1,8 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from dbcon.egais_model import ConnectTap, ConnectTapSpec, Utms, ConnectTapLog
 from dbcon.config import session
 from sqlalchemy import select, and_, desc
+
+gmt_plus_5 = timezone(timedelta(hours=5))
 
 
 def request_docs(date_start=None, date_end=None, doc_id=None, orgid=None):
@@ -98,14 +100,14 @@ def update_doc_log(doc_id, error=None):
         if error:
             new_log = ConnectTapLog(
                 id=doc_id,
-                DocDateSend=datetime.now(),
+                DocDateSend=datetime.now(gmt_plus_5),
                 Status=1,
                 Error=error
             )
         else:
             new_log = ConnectTapLog(
                 id=doc_id,
-                DocDateSend=datetime.now(),
+                DocDateSend=datetime.now(gmt_plus_5),
                 Status=2,
                 Error=None
             )
