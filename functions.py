@@ -154,13 +154,6 @@ def create_qr(gs1, expdate, shop, doc_id):
 
     else:
         send_email(shop=shop, doc=doc_id, shcode=shcode)
-        # captions = ['Не печатать!'] * 6
-        # captions[3] = shcode
-        # pdf_writer = f'{shop_name}_{doc_id}_Не печатать.pdf'
-    # Генерация QR-кода
-
-    # qr_img = qrcode.make(qr_data)
-    # qr_img.save(temp_image)
 
 
 def send_docs_dates():
@@ -180,7 +173,7 @@ def send_docs_dates():
             docs = request_docs(date_start=days_ago, date_end=current_time, orgid=i['Id'])
             for doc_id, mark, expdays, doc_date in docs:
                 expday = doc_date + timedelta(expdays)
-                create_qr(mark, expday.strftime('%d.%m.%Y'), org_name, doc_id, org_id)
+                create_qr(mark, expday.strftime('%d.%m.%Y'), org_name, doc_id)
 
 
 def send_docs_ids(doc_id):
@@ -188,7 +181,7 @@ def send_docs_ids(doc_id):
     for doc_id, mark, expdays, doc_date, org in docs:
         expday = doc_date + timedelta(expdays)
         # print(doc_id, mark, expday.strftime('%d.%m.%Y'), org_name(org), org)
-        create_qr(gs1=mark, expdate=expday.strftime('%d.%m.%Y'), shop=org_name(org), doc_id=doc_id, org_id=org)
+        create_qr(gs1=mark, expdate=expday.strftime('%d.%m.%Y'), shop=org_name(org), doc_id=doc_id)
     return f'{doc_id} is send'
 
 
