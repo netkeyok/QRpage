@@ -28,7 +28,7 @@ def send_email(shop, doc, shcode=None, file_path=None, card_name=None):
     recipient_email = ''
     if shop in mail_dict:
         recipient_email = mail_dict[shop]
-        print(shop)
+        # print(shop)
     else:
         print(shop)
         print("Адрес не найден")
@@ -120,8 +120,9 @@ def create_pdf_with_images(image_path, output_pdf_path, caption, title):
 
 
 # Создание изображения QR кода
-def create_qr(gs1, expdate, shop, doc_id, org_id):
+def create_qr(gs1, expdate, shop, doc_id):
     shop_name = f'Магазин {shop}'
+    name = get_article_name(gs1)
 
     file_image = f'{shop_name}_{doc_id}_qr_code.png'
     temp_image = os.path.join(path, file_image)
@@ -135,7 +136,7 @@ def create_qr(gs1, expdate, shop, doc_id, org_id):
 
     # кол-во разлитого напитка
     volume = '01500'
-    name = get_article_name(shcode)
+
     # Формируем код согласно шаблону УКМ4
     qr_data = fr'{gs2}3353{volume}'
     text = 'Не является маркой!'
@@ -186,35 +187,17 @@ def send_docs_ids(doc_id):
     docs = request_docs(doc_id=doc_id)
     for doc_id, mark, expdays, doc_date, org in docs:
         expday = doc_date + timedelta(expdays)
-        print(doc_id, mark, expday.strftime('%d.%m.%Y'), org_name(org), org)
+        # print(doc_id, mark, expday.strftime('%d.%m.%Y'), org_name(org), org)
         create_qr(gs1=mark, expdate=expday.strftime('%d.%m.%Y'), shop=org_name(org), doc_id=doc_id, org_id=org)
     return f'{doc_id} is send'
 
 
-def check_docs():
-    print("start checking")
-    res = None
-    for i in orgs:
-        org = i['Id']
-        data = request_docs(orgid=org)
-        result = redis_conn.get(org)
-        if data and result:
-            doc_id = data[0][0]
-            int_result = int(result)
-            if int_result != doc_id:
-                send_docs_ids(doc_id)
-                res = f'Document No. {doc_id} was sent'
-            else:
-                res = 'Nothing to send'
-    print('End checking')
-    return res
-
-
 def check_doc_status():
     date_now = datetime.now()
-    date_ago = date_now - timedelta(days=2)
+    date_ago = date_now - timedelta(days=4)
     added = []
     resend = []
+    waiting = []
     for i in orgs:
         org = i['Id']
         data = request_docs(date_start=date_ago, date_end=date_now, orgid=org)
@@ -222,22 +205,25 @@ def check_doc_status():
             doc_id = d[0]
             print(f'Проверка документа: {doc_id}')
             result_check = check_doc_log(doc_id)
-            print(result_check)
             if result_check is None:
                 send_docs_ids(doc_id)
                 added.append(doc_id)
-            elif result_check[0][1] != 2:
-                send_docs_ids(doc_id)
-                resend.append(doc_id)
+            elif result_check[0][1] == 1:
+                if get_article_name(d[1]):
+                    send_docs_ids(doc_id)
+                    resend.append(doc_id)
+                else:
+                    waiting.append(doc_id)
     return {
         'docs_add': added,
-        'docs_resend': resend
+        'docs_resend': resend,
+        'waiting_docs': waiting
     }
 
 
 if __name__ == '__main__':
-    send_docs_ids(302)
+    # send_docs_ids(302)
     # create_pdf_with_text('output.pdf', '123456', '7890123456789')
     # send_email("Апельсин 18", org_id=99, doc=585, shcode='7890123456789')
     # send_email("Апельсин 18", org_id=99, doc=585, shcode='7890123456789')
-    # check_doc_status()
+    check_doc_status()

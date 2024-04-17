@@ -1,7 +1,8 @@
 import requests
 
 
-def get_article_name(barcode):
+def get_article_name(gs1):
+    barcode = gs1[3:16]
     url = f"http://192.168.0.239:8083/v1/get_card?bar={barcode}"
     response = requests.get(url)
     data = response.json()

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from dbcon.db_requestst import organization_list
-from functions import send_docs_ids, check_docs
+from functions import send_docs_ids, check_doc_status
 
 app = FastAPI()
 
@@ -20,5 +20,5 @@ async def send_doc(doc_id: int):
 
 @app.get("/check/")
 async def check():
-    resilt = check_docs()
+    resilt = check_doc_status()
     return resilt

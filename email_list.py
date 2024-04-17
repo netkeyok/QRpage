@@ -1,5 +1,5 @@
 # mail_dict = {
-#     "Апельсин 8": "oper.ap8@local",
+#     "Апельсин 13": "admin@local",
 # }
 
 mail_dict = {
