@@ -50,3 +50,11 @@ class ConnectTapLog(Base):
     DocDateSend = Column(DateTime, nullable=False)
     Status = Column(SmallInteger, nullable=False)
     Error = Column(String(2000))
+
+
+class ConnectTapNames(Base):
+    __tablename__ = 'RinatConnectTapNames'
+
+    BARCODE = Column(String(50), primary_key=True)
+    NAME = Column(String(255))
+    UPDATED = Column(DateTime, nullable=False)

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from dbcon.egais_model import ConnectTap, ConnectTapSpec, Utms, ConnectTapLog
+from dbcon.egais_model import ConnectTap, ConnectTapSpec, Utms, ConnectTapLog, ConnectTapNames
 from dbcon.config import session
 from sqlalchemy import select, and_, desc
 
@@ -132,10 +132,24 @@ def check_doc_log(doc_id):
         return None
 
 
-if __name__ == '__main__':
-    date_now = datetime.now()
-    date_ago = date_now - timedelta(days=2)
+def update_tap_names(barcode, name):
+    with session as s:
+        if name is None:
+            name = 'Штрихкод отсутствует в Супермаг'
+        new_barcode = ConnectTapNames(
+            BARCODE=barcode,
+            NAME=name,
+            UPDATED=datetime.now(gmt_plus_5),
+        )
+        s.merge(new_barcode)
+        s.commit()
 
-    data = request_docs(date_start=date_ago, date_end=date_now, orgid=27)
-    for d in data:
-        print(d)
+
+if __name__ == '__main__':
+    # date_now = datetime.now()
+    # date_ago = date_now - timedelta(days=2)
+    #
+    # data = request_docs(date_start=date_ago, date_end=date_now, orgid=27)
+    # for d in data:
+    #     print(d)
+    pass

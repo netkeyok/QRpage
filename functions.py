@@ -169,7 +169,6 @@ def send_docs_dates():
     for i in orgs:
         if i:
             org_name = i['Comment']
-            org_id = i['Id']
             docs = request_docs(date_start=days_ago, date_end=current_time, orgid=i['Id'])
             for doc_id, mark, expdays, doc_date in docs:
                 expday = doc_date + timedelta(expdays)
